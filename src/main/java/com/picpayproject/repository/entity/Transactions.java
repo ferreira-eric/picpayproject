@@ -5,7 +5,9 @@ import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
+import org.springframework.data.annotation.CreatedDate;
 
+import java.io.Serial;
 import java.io.Serializable;
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
@@ -17,6 +19,9 @@ import java.time.LocalDateTime;
 @Setter
 @Table(name = "transactions")
 public class Transactions implements Serializable {
+
+    @Serial
+    private static final long serialVersionUID = -2193694992638202000L;
 
     @Id
     @GeneratedValue(strategy = GenerationType.AUTO)
@@ -32,5 +37,6 @@ public class Transactions implements Serializable {
     @JoinColumn(name = "receiver_id")
     private User receiver;
 
+    @CreatedDate
     private LocalDateTime timestamp;
 }
