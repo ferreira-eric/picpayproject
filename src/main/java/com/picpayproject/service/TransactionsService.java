@@ -28,37 +28,43 @@ public class TransactionsService {
     private NotificationService notificationService;
 
     public Transactions createTransaction(TransactionsDTO dto) throws Exception {
-        //TODO refatorar metodo
         User sender = userService.findUserById(dto.getSenderId());
         User receiver = userService.findUserById(dto.getReceiverId());
 
         userService.validateTransaction(sender, dto.getValue());
 
-        boolean isAuthorized = authorizeTransaction();
-
         //TODO criar exception especifica
-        if(!isAuthorized) throw new Exception("Transação não autorizada");
+        if(!authorizeTransaction()) throw new Exception("Transação não autorizada");
 
         Transactions transactions = new Transactions();
         transactions.setSender(sender);
         transactions.setReceiver(receiver);
         transactions.setAmount(dto.getValue());
 
-        sender.setBalance(sender.getBalance().subtract(dto.getValue()));
-        receiver.setBalance(receiver.getBalance().add(dto.getValue()));
+        balanceTransaction(sender, receiver, dto);
 
         transactions = transactionsRepository.save(transactions);
         userService.saveUser(sender);
         userService.saveUser(receiver);
 
-        notificationService.sendNotification(sender, "Transacao efetuada com sucesso");
-        notificationService.sendNotification(receiver, "Transação recebida com sucesso");
+        sendNotificationToSenderAndReceiver(sender, receiver);
+
         return transactions;
     }
 
-    public boolean authorizeTransaction() {
+    private boolean authorizeTransaction() {
          ResponseEntity<Map> response = restTemplate.getForEntity("https://run.mocky.io/v3/5794d450-d2e2-4412-8131-73d0293ac1cc", Map.class);
 
         return response.getStatusCode().equals(HttpStatus.OK);
+    }
+
+    private void sendNotificationToSenderAndReceiver(User sender, User receiver) throws Exception {
+        notificationService.sendNotification(sender, "Transacão efetuada com sucesso");
+        notificationService.sendNotification(receiver, "Transação recebida com sucesso");
+    }
+
+    private void balanceTransaction(User sender, User receiver, TransactionsDTO dto) {
+        sender.setBalance(sender.getBalance().subtract(dto.getValue()));
+        receiver.setBalance(receiver.getBalance().add(dto.getValue()));
     }
 }
