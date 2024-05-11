@@ -11,7 +11,7 @@ import java.math.BigDecimal;
 @AllArgsConstructor
 @Getter
 @Setter
-public final class TransactionsDTO implements Serializable {
+public final class TransactionDTO implements Serializable {
 
     @Serial
     private static final long serialVersionUID = -9127054446933397245L;

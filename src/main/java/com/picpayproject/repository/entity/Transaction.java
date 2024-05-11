@@ -20,7 +20,7 @@ import java.time.LocalDateTime;
 @Setter
 @EntityListeners(AuditingEntityListener.class)
 @Table(name = "transactions")
-public class Transactions implements Serializable {
+public class Transaction implements Serializable {
 
     @Serial
     private static final long serialVersionUID = -2193694992638202000L;
