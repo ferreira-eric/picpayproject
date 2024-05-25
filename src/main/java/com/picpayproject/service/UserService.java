@@ -2,6 +2,9 @@ package com.picpayproject.service;
 
 import com.picpayproject.dtos.UserDTO;
 import com.picpayproject.enums.UserType;
+import com.picpayproject.exception.UnauthorizedTransactionException;
+import com.picpayproject.exception.UserAlreadyExistException;
+import com.picpayproject.exception.UserWithInsufficientBalanceException;
 import com.picpayproject.repository.UserRepository;
 import com.picpayproject.repository.entity.User;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -9,7 +12,6 @@ import org.springframework.stereotype.Service;
 
 import java.math.BigDecimal;
 import java.util.List;
-import java.util.Optional;
 
 @Service
 public class UserService {
@@ -19,36 +21,24 @@ public class UserService {
 
     public void validateTransaction(User sender, BigDecimal amount) throws Exception {
         if(sender.getUserType().equals(UserType.MERCHANT)) {
-            //TODO criar exception especifica
-            throw new Exception("Usuário do tipo logista não está autorizado a fazer transação");
+            throw new UnauthorizedTransactionException();
         }
 
         if(sender.getBalance().compareTo(amount) < 0) {
-            //TODO criar exception especifica
-            throw new Exception("Usuário com saldo insuficiente");
+            throw new UserWithInsufficientBalanceException();
         }
     }
 
     public User findUserById(Long id) throws Exception {
-        //TODO criar exception especifica
-        return userRepository.findUserById(id).orElseThrow(() -> new Exception("Usuário não encontrado"));
+        return userRepository.findUserById(id).orElseThrow(() -> new Exception(String.format("User not Found by id{%d}", id)));
     }
 
-    public Optional<User> findOptionalUserById(Long id){
-        return userRepository.findUserById(id);
-    }
+    public User createUser(UserDTO userDTO) throws Exception {
+        validateUser(userDTO);
 
-    public User createUser(UserDTO dto) throws Exception {
-        var findUser = userRepository.findUserByDocument(dto.getDocument());
-
-        if(findUser.isPresent()) {
-            //TODO criar exception especifica
-           throw new Exception("Usuario já existente");
-        }
-
-        User user = User.deserialize(dto);
-
+        User user = User.deserialize(userDTO);
         user = userRepository.save(user);
+
         return user;
     }
 
@@ -58,5 +48,13 @@ public class UserService {
 
     public List<User> getAll() {
          return userRepository.findAll();
+    }
+
+    public void validateUser (UserDTO userDTO) throws Exception{
+        var findUser = userRepository.findUserByDocumentAndEmail(userDTO.getDocument(), userDTO.getEmail());
+
+        if(findUser.isPresent()) {
+            throw new UserAlreadyExistException();
+        }
     }
 }

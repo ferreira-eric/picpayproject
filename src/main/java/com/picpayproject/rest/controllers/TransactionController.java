@@ -18,10 +18,12 @@ public class TransactionController implements TransactionAPI {
     private TransactionService service;
 
     @Override
-    public ResponseEntity<Transaction> createTransactions(TransactionDTO dto) throws Exception {
-        //TODO tratar exception
-        Transaction transaction = service.createTransaction(dto);
-
-        return ResponseEntity.status(HttpStatus.CREATED).body(transaction);
+    public ResponseEntity<Object> createTransactions(TransactionDTO dto) {
+        try {
+            Transaction transaction = service.createTransaction(dto);
+            return ResponseEntity.status(HttpStatus.CREATED).body(transaction);
+        } catch (Exception exception) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(exception.getMessage());
+        }
     }
 }

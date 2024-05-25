@@ -10,9 +10,9 @@ import org.springframework.web.bind.annotation.RequestBody;
 import java.util.List;
 
 public interface UserAPI {
-    @PostMapping("/createuser")
-    ResponseEntity<User> createUser(@RequestBody UserDTO userDTO) throws Exception;
+    @PostMapping("/create")
+    ResponseEntity<Object> createUser(@RequestBody UserDTO userDTO);
 
-    @GetMapping("/alluser")
+    @GetMapping("/all")
     ResponseEntity<List<User>> getAllUsers();
 }

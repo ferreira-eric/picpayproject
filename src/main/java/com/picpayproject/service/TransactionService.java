@@ -1,17 +1,19 @@
 package com.picpayproject.service;
 
+import com.picpayproject.dtos.AuthorizationDTO;
 import com.picpayproject.dtos.TransactionDTO;
+import com.picpayproject.exception.UnauthorizedTransactionException;
 import com.picpayproject.repository.TransactionRepository;
 import com.picpayproject.repository.entity.Transaction;
 import com.picpayproject.repository.entity.User;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
 
 import java.math.BigDecimal;
-import java.util.Map;
 
 @Service
 public class TransactionService {
@@ -28,14 +30,16 @@ public class TransactionService {
     @Autowired
     private NotificationService notificationService;
 
+    @Value("${authorization.api.url}")
+    String AuthorizationApiUrl;
+
     public Transaction createTransaction(TransactionDTO dto) throws Exception {
         User sender = userService.findUserById(dto.getSenderId());
         User receiver = userService.findUserById(dto.getReceiverId());
 
         userService.validateTransaction(sender, dto.getValue());
 
-        //TODO criar exception especifica
-        if(!authorizeTransaction()) throw new Exception("Transação não autorizada");
+        if(!authorizeTransaction()) throw new UnauthorizedTransactionException();
 
         Transaction transaction = new Transaction();
         populateTransaction(transaction, sender, receiver, dto.getValue());
@@ -51,14 +55,20 @@ public class TransactionService {
     }
 
     private boolean authorizeTransaction() {
-        ResponseEntity<Map> response = restTemplate.getForEntity("https://run.mocky.io/v3/5794d450-d2e2-4412-8131-73d0293ac1cc", Map.class);
+        ResponseEntity<AuthorizationDTO> response = restTemplate.getForEntity(AuthorizationApiUrl, AuthorizationDTO.class);
 
-        return response.getStatusCode().equals(HttpStatus.OK);
+        if(response.getStatusCode().equals(HttpStatus.OK) && response.getBody() != null) {
+            AuthorizationDTO authorizationDTO = response.getBody();
+
+            return authorizationDTO.getData().isAuthorization();
+        }
+
+        return false;
     }
 
     private void sendNotificationToSenderAndReceiver(User sender, User receiver) throws Exception {
-        notificationService.sendNotification(sender, "Transacão efetuada com sucesso");
-        notificationService.sendNotification(receiver, "Transação recebida com sucesso");
+        notificationService.sendNotification(sender, "Transaction completed successfully");
+        notificationService.sendNotification(receiver, "Transaction received successfully");
     }
 
     private void balanceTransaction(User sender, User receiver, TransactionDTO dto) {

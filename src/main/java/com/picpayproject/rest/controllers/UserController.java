@@ -20,10 +20,13 @@ public class UserController implements UserAPI {
     private UserService service;
 
     @Override
-    public ResponseEntity<User> createUser(UserDTO userDTO) throws Exception {
-        //TODO tratar exception
-        User user = service.createUser(userDTO);
-        return ResponseEntity.status(HttpStatus.CREATED).body(user);
+    public ResponseEntity<Object> createUser(UserDTO userDTO) {
+        try {
+            User user = service.createUser(userDTO);
+            return ResponseEntity.status(HttpStatus.CREATED).body(user);
+        }catch (Exception exception){
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(exception.getMessage());
+        }
     }
 
     @Override

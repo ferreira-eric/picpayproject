@@ -16,9 +16,9 @@ public final class TransactionDTO implements Serializable {
     @Serial
     private static final long serialVersionUID = -9127054446933397245L;
 
-    private final BigDecimal value;
+    private BigDecimal value;
 
-    private final Long senderId;
+    private Long senderId;
 
-    private final Long receiverId;
+    private Long receiverId;
 }
